@@ -336,13 +336,19 @@ read-only install/preflight stages.
 ### Version is now explicit
 
 Without `-ldflags`, Go builds were reported by TECHO5 as
-`v0.0.0-dev (unknown, unknown)`. The owner build helper above stamps
-a comparable build identity such as `v1.6.0_frankenasp.abcdef1234`
-plus its source revision and build date. The **base version** is the
-actual official TECHO5 release used for comparison; it is chosen
-explicitly. Do not stamp a fake, high future version to suppress
-updates. Home Assistant's comparison ignores the part after `_`,
-so a future official `v1.6.1` may still be offered.
+`v0.0.0-dev (unknown, unknown)`. The build helper now stamps three independent
+identities: **TECHO5 baseline**, **FrankenASP toolkit version/source revision**
+and **TECHO5 adapter revision**, for example
+`v1.6.0_frankenasp-1.0.0-dev.1.f0123456789.aabcdef0123`.
+The complete source SHAs are also embedded in `layout.GitCommit` and reported
+by the daemon's version command. A build from a FrankenASP commit after the
+release tag gets `.nextN`; either dirty checkout gets its own content digest.
+The **TECHO5 base version remains a deliberately supplied, owner-checked
+compatibility claim**, not a Git ancestry check performed by this script.
+Do **not** stamp a fake, newer TECHO5 version to suppress updates.
+Home Assistant's version comparison ignores everything after `_`, so the next
+official TECHO5 release may still be offered. Persistent FrankenASP operation
+continues to be protected by its independent update guard.
 
 For persistent operation, **rebuild with the current experimental
 source** including `frankenasp_guard.go`, which refuses official

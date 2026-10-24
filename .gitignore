@@ -1,0 +1,20 @@
+# Private factory data, outputs, local staging, logs
+*.so
+*.img
+*.raw
+*.pcm
+*.wav
+*.tar
+*.tar.gz
+*.zip
+*.jsonl
+*.log
+*.py[cod]
+__pycache__/
+techo5-experimental
+vendor-local/
+private/
+backups/
+.stage/
+.env
+.env.*

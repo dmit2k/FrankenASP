@@ -1,0 +1,12 @@
+vendor-local/
+*.img
+*.raw
+*.pcm
+*.wav
+*.so
+*.o
+*.tar
+*.tar.gz
+*.log
+*.jsonl
+__pycache__/

@@ -52,6 +52,8 @@ git clone --branch frankenasp-adapter https://github.com/dmit2k/techo5.git techo
 # Pin the adapter revision used in the independent split CI;
 # do not assume the development branch will always remain unchanged.
 git -C techo5-adapter checkout --detach 046589f6c6d5a33d5840c734b5b0cc603ce4ba28
+# Fetch upstream release tags: the builder verifies the real baseline by ancestry.
+git -C techo5-adapter fetch --tags https://github.com/HuskerMinion/techo5.git
 cd frankenasp
 test -z "$(git status --porcelain)"
 python3 -m unittest discover -s tools/frankenasp/tests -q
@@ -84,7 +86,7 @@ git status --porcelain
 
 Expected architecture: **ELF64 AArch64**. The experimental daemon stamps three identities: the **owner-selected upstream TECHO5 baseline** before `_`, the nearest reachable **FrankenASP release tag** (or `dev`, with `.nextN` for subsequent commits) and shortened **FrankenASP and adapter source SHAs** after `_`. For a clean checkout at the research release, the format is `v1.6.0_frankenasp-1.0.0-dev.1.f<franken-SHA10>.a<adapter-SHA10>`. Go's `layout.GitCommit` metadata contains **both full 40-character SHAs**. Changes in either checkout add `.fd<digest>` and/or `.ad<digest>`, so a dirty source cannot masquerade as the tagged release. A checkout beyond the tag additionally gets `.nextN` (unreleased development).
 
-**Important:** the supplied `v1.6.0` is a TECHO5 update-ranking baseline, **not a verified statement that the adapter was merged from that precise upstream tag**. Do not stamp `v1.6.3` merely to suppress official OTA: first port/merge the integration onto the correct upstream sources and pass the compatibility tests. The portion after `_` is ignored by HA's version ordering, so an actually newer upstream release can remain visible. The recorded hash of any compiled binary applies to that exact build; the build timestamp changes binary hashes between otherwise identical source builds. The standalone FrankenASP tag does **not** upgrade or replace TECHO5.
+**Important:** the requested TECHO5 base must exist as an official Git release tag in the adapter checkout, be an ancestor of its HEAD, and be the newest released baseline contained in that history. The builder rejects missing, unrelated or outdated baselines. Fetch official tags as shown above; do not invent a newer base merely to suppress OTA. This is a source-provenance check, **not** acoustic or on-device compatibility certification. The portion after the underscore is ignored for HA version ranking, and binary hashes may differ because builds are timestamped.
 
 ## ARM32/Bionic worker and device-side components
 

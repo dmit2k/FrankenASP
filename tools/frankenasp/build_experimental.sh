@@ -32,6 +32,23 @@ DIR="$ADAPTER_ROOT/echod"
 }
 FRANKEN_SHA="$(git -C "$FRANKEN_ROOT" rev-parse --verify HEAD)"
 ADAPTER_SHA="$(git -C "$ADAPTER_ROOT" rev-parse --verify HEAD)"
+# Verify the official baseline is really contained in this checkout.
+# This prevents misleading HA update rankings based on an arbitrary argument.
+BASE_TAG_SHA="$(git -C "$ADAPTER_ROOT" rev-parse -q --verify "refs/tags/$BASE^{commit}" 2>/dev/null || true)"
+if [[ -z "$BASE_TAG_SHA" ]]; then
+    echo "Missing TECHO5 release tag $BASE; fetch upstream tags first" >&2
+    exit 2
+fi
+if ! git -C "$ADAPTER_ROOT" merge-base --is-ancestor "$BASE_TAG_SHA" "$ADAPTER_SHA"; then
+    echo "TECHO5 base $BASE is not an ancestor of the adapter checkout" >&2
+    exit 2
+fi
+LATEST_BASE="$(git -C "$ADAPTER_ROOT" tag --merged HEAD --list 'v[0-9]*' |
+    grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | LC_ALL=C sort -V | tail -n 1 || true)"
+if [[ -n "$LATEST_BASE" && "$LATEST_BASE" != "$BASE" ]]; then
+    echo "Adapter contains a different released baseline $LATEST_BASE; requested $BASE" >&2
+    exit 2
+fi
 FRANKEN_SHORT="${FRANKEN_SHA:0:10}"
 ADAPTER_SHORT="${ADAPTER_SHA:0:10}"
 

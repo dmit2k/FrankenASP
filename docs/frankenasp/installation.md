@@ -76,6 +76,8 @@ Build your **own** experimental daemon from the companion
 ```sh
 # Use the actual TECHO5 release currently installed on the Echo as the base.
 # Example: v1.6.0. No upstream version is faked or raised merely to hide updates.
+# Fetch official TECHO5 release tags before building: the script verifies base ancestry.
+git -C /absolute/path/to/techo5-frankenasp-adapter fetch --tags https://github.com/HuskerMinion/techo5.git
 export PATH="/path/to/go1.26/bin:$PATH"
 export TECHO5_ADAPTER_ROOT="/absolute/path/to/techo5-frankenasp-adapter"
 bash tools/frankenasp/build_experimental.sh v1.6.0 ./techo5-experimental

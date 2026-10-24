@@ -32,6 +32,7 @@ class BuildVersionTests(unittest.TestCase):
         )
         self.frankensha = self.init_repo(self.franken)
         self.adaptersha = self.init_repo(self.adapter)
+        self.git(self.adapter, "tag", "v1.6.0")
         self.git(self.franken, "tag", "-a", "v1.0.0-dev.1", "-m", "test release")
         self.fakebin = self.root / "fakebin"
         self.fakebin.mkdir()
@@ -100,6 +101,35 @@ class BuildVersionTests(unittest.TestCase):
         result = self.run_build("v9999")
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(self.output.exists())
+
+    def test_nonexistent_base_tag_is_rejected(self):
+        result = self.run_build("v1.6.9")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Missing TECHO5 release tag", result.stderr)
+
+    def test_base_must_be_ancestor_of_adapter(self):
+        self.git(self.adapter, "checkout", "--orphan", "unrelated")
+        self.git(self.adapter, "rm", "-qrf", ".")
+        p = self.adapter / "echod/internal/hardware/mic/factory_asp_athena.go"
+        p.parent.mkdir(parents=True, exist_ok=True)
+        p.write_text("package mic\n")
+        self.git(self.adapter, "add", "-A")
+        self.git(self.adapter, "commit", "-qm", "unrelated history")
+        result = self.run_build()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("not an ancestor", result.stderr)
+
+    def test_older_base_rejected_when_new_release_merged(self):
+        p = self.adapter / "echod/internal/hardware/mic/factory_asp_athena.go"
+        p.write_text("package mic\n// update\n")
+        self.git(self.adapter, "add", "-A")
+        self.git(self.adapter, "commit", "-qm", "upstream release changes")
+        self.git(self.adapter, "tag", "v1.6.1")
+        result = self.run_build()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("different released baseline", result.stderr)
+        result = self.run_build("v1.6.1")
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_adapter_without_factory_glue_is_rejected(self):
         bogus = self.root / "bogus"

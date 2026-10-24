@@ -82,7 +82,9 @@ sha256sum ./techo5-experimental
 git status --porcelain
 ```
 
-Expected architecture: **ELF64 AArch64**. The daemon's software version retains a TECHO5-compatible base identifier `v1.6.0_frankenasp.<source-commit>`. The standalone research release label **FrankenASP 1.0 Dev Edition** is *not* the upstream TECHO5 version. The Git state must be clean and the version must **not** contain `.dirty`. The recorded hash of any compiled binary applies to that exact build; timestamps embedded in Go linker flags can change binary hashes between otherwise identical builds.
+Expected architecture: **ELF64 AArch64**. The experimental daemon stamps three identities: the **owner-selected upstream TECHO5 baseline** before `_`, the nearest reachable **FrankenASP release tag** (or `dev`, with `.nextN` for subsequent commits) and shortened **FrankenASP and adapter source SHAs** after `_`. For a clean checkout at the research release, the format is `v1.6.0_frankenasp-1.0.0-dev.1.f<franken-SHA10>.a<adapter-SHA10>`. Go's `layout.GitCommit` metadata contains **both full 40-character SHAs**. Changes in either checkout add `.fd<digest>` and/or `.ad<digest>`, so a dirty source cannot masquerade as the tagged release. A checkout beyond the tag additionally gets `.nextN` (unreleased development).
+
+**Important:** the supplied `v1.6.0` is a TECHO5 update-ranking baseline, **not a verified statement that the adapter was merged from that precise upstream tag**. Do not stamp `v1.6.3` merely to suppress official OTA: first port/merge the integration onto the correct upstream sources and pass the compatibility tests. The portion after `_` is ignored by HA's version ordering, so an actually newer upstream release can remain visible. The recorded hash of any compiled binary applies to that exact build; the build timestamp changes binary hashes between otherwise identical source builds. The standalone FrankenASP tag does **not** upgrade or replace TECHO5.
 
 ## ARM32/Bionic worker and device-side components
 

@@ -11,13 +11,13 @@ OUT="$2"
 [[ "$BASE" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
     echo "Expected official TECHO5 base vX.Y.Z (e.g. v1.6.0)" >&2; exit 2;
 }
-if [[ -z "\${TECHO5_ADAPTER_ROOT:-}" ]]; then
+if [[ -z "${TECHO5_ADAPTER_ROOT:-}" ]]; then
     echo "Set TECHO5_ADAPTER_ROOT to dmit2k/techo5 (frankenasp-adapter)" >&2
     exit 2
 fi
 command -v git >/dev/null || { echo "git is required" >&2; exit 2; }
 command -v go >/dev/null || { echo "Go 1.26 toolchain required" >&2; exit 2; }
-TOOL_DIR="$(cd "$(dirname "\${BASH_SOURCE[0]}")" && pwd)"
+TOOL_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 FRANKEN_ROOT="$(cd "$TOOL_DIR/../.." && pwd)"
 ADAPTER_ROOT="$(cd "$TECHO5_ADAPTER_ROOT" && pwd)"
 DIR="$ADAPTER_ROOT/echod"
@@ -32,18 +32,18 @@ DIR="$ADAPTER_ROOT/echod"
 }
 FRANKEN_SHA="$(git -C "$FRANKEN_ROOT" rev-parse --verify HEAD)"
 ADAPTER_SHA="$(git -C "$ADAPTER_ROOT" rev-parse --verify HEAD)"
-FRANKEN_SHORT="\${FRANKEN_SHA:0:10}"
-ADAPTER_SHORT="\${ADAPTER_SHA:0:10}"
+FRANKEN_SHORT="${FRANKEN_SHA:0:10}"
+ADAPTER_SHORT="${ADAPTER_SHA:0:10}"
 
 # Exact version tag => release version. Untagged commits after a release
 # are marked nextN; a checkout with no reachable version tag is "dev".
 DESCRIBE="$(git -C "$FRANKEN_ROOT" describe --tags --long --abbrev=10 --match 'v[0-9]*' HEAD 2>/dev/null || true)"
 FRANKEN_VERSION="dev"
 if [[ "$DESCRIBE" =~ ^v([0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?)-([0-9]+)-g([0-9a-f]+)$ ]]; then
-    FRANKEN_VERSION="\${BASH_REMATCH[1]}"
-    AHEAD="\${BASH_REMATCH[3]}"
+    FRANKEN_VERSION="${BASH_REMATCH[1]}"
+    AHEAD="${BASH_REMATCH[3]}"
     if (( AHEAD > 0 )); then
-        FRANKEN_VERSION="\${FRANKEN_VERSION}.next\${AHEAD}"
+        FRANKEN_VERSION="${FRANKEN_VERSION}.next${AHEAD}"
     fi
 fi
 
@@ -74,15 +74,15 @@ fi
 
 # The portion before '_' is the owner-selected TECHO5 baseline.
 # Home Assistant drops the build detail after '_' for version ranking.
-VERSION="\${BASE}_frankenasp-\${FRANKEN_VERSION}.f\${FRANKEN_SHORT}.a\${ADAPTER_SHORT}\${FRANKEN_DIRTY}\${ADAPTER_DIRTY}"
+VERSION="${BASE}_frankenasp-${FRANKEN_VERSION}.f${FRANKEN_SHORT}.a${ADAPTER_SHORT}${FRANKEN_DIRTY}${ADAPTER_DIRTY}"
 NOW="$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
 PKG="github.com/HuskerMinion/techo5/echod/internal/layout"
 # The adapter only reads GitCommit for --version; retain both full SHAs.
-SOURCE_ID="frankenasp=\${FRANKEN_SHA},adapter=\${ADAPTER_SHA}"
+SOURCE_ID="frankenasp=${FRANKEN_SHA},adapter=${ADAPTER_SHA}"
 mkdir -p "$(dirname "$OUT")"
 OUT="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"
 (cd "$DIR" && CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -trimpath \
-    -ldflags "-s -w -X \${PKG}.Version=\${VERSION} -X \${PKG}.GitCommit=\${SOURCE_ID} -X \${PKG}.BuildDate=\${NOW}" \
+    -ldflags "-s -w -X ${PKG}.Version=${VERSION} -X ${PKG}.GitCommit=${SOURCE_ID} -X ${PKG}.BuildDate=${NOW}" \
     -o "$OUT" ./cmd/echod)
 echo "Built owner-local experimental TECHO5: $OUT"
 echo "Staged software version: $VERSION"

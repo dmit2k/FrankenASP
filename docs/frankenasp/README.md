@@ -97,7 +97,7 @@ during music and **0.85 for FrankenASP**.
 STT accuracy of subsequent voice commands have **not yet been tested**.
 These are preliminary end-to-end observations, **not** proof that any
 one Amazon algorithm (AEC, beamforming, etc.) caused the improvement.
-See the [concise results and exact scope](acoustic-results-20261023.md).
+See the **[completed acoustic comparison, room diagram and full results](athena-acoustic-comparison-20261025.md)**; the [23 October snapshot](acoustic-results-20261023.md) records the earlier interim state.
 
 ## Contents
 
@@ -141,6 +141,8 @@ See [multi-device compatibility and portability scope](multi-device-scope.md).
 
 ## Documentation
 
+- **[Full Athena wake-word acoustic benchmark (25 October 2026): all speech levels, no music / mono / stereo, directional interference and room diagram](athena-acoustic-comparison-20261025.md)**
+
 - [FrankenASP 1.0 Dev Edition 1: release scope and known limitations](release-v1.0.0-dev.1.md)
 - [Independent build on Ubuntu 26.04: verified Go toolchain, packages, tests and build commands](build-on-ubuntu-26.04.md)
 - [Architecture and open questions](architecture.md)
@@ -161,7 +163,7 @@ See [multi-device compatibility and portability scope](multi-device-scope.md).
 **Historical reports below record what was known at each checkpoint.** Earlier
 statements that acoustic testing was "not yet performed" must be read in their
 original date context; the subsequent wake-word results are documented in
-[the completed acoustic study](acoustic-results-20261023.md). The tested
+[the completed acoustic study](athena-acoustic-comparison-20261025.md). The tested
 combined Dev Edition remains archived separately; later repository splitting
 has not been followed by new on-device acoustic qualification.
 

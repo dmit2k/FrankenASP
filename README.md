@@ -55,22 +55,24 @@ The adapter is presently **Athena-specific, not a generic stable plugin API**. A
 
 The experimentally validated all-in-one implementation remains frozen in the [FrankenASP 1.0 Dev Edition snapshot](https://github.com/dmit2k/techo5/tree/snapshot/frankenasp-v1.0.0-dev.1). Separating the source code into two repositories is a **reorganization, not a new acoustic qualification**.
 
-## First research results — a measured difference, not a predetermined verdict
+## Completed Athena acoustic comparison — 25 October 2026
 
-An Echo Show 8 Gen 2 was **playing background music through its own built-in speakers** while scripted wake-word stimuli (and, in some scenarios, interfering TV audio) were presented from controlled external positions.
+**[Read the full wake-word benchmark, including the room-layout diagram, methodology, five directional scenarios and interpretation](docs/frankenasp/athena-acoustic-comparison-20261025.md).**
 
-Here **mono/stereo describes only playback of music by the Echo's speakers** — not its microphone array, beamforming mode or ASP output channel count.
+Using the same physical Echo Show 8 Gen 2, microWakeWord model, room and external speech recordings, the experiment compared the **standard TECHO5 microphone frontend** with the **original Amazon factory ASP running via FrankenASP**. Quiet (30), normal (35) and loud (40) speech were tested with music off, mono and stereo; a five-scenario sweep supplied **60 scheduled presentations per configuration**.
 
-| Normal speech stimulus (test level 35) | Echo music: mono | Echo music: stereo |
-| --- | ---: | ---: |
-| Stock TECHO5 frontend | 45/60 (75.0%) | 22/60 (36.7%) |
-| FrankenASP factory frontend | **59/60 (98.3%)** | **54/60 (90.0%)** |
+| With music playing on the Echo | Quiet — 30 | Normal — 35 | Loud — 40 |
+| --- | ---: | ---: | ---: |
+| TECHO5 · mono | 35/60 (58.3%) | 45/60 (75.0%) | 49/60 (81.7%) |
+| TECHO5 · stereo | 13/60 (21.7%) | 22/60 (36.7%) | 33/60 (55.0%) |
+| FrankenASP · mono | 41/60 (68.3%) | 59/60 (98.3%) | 60/60 (100%) |
+| FrankenASP · stereo | 45/60 (75.0%) | 54/60 (90.0%) | 59/60 (98.3%) |
 
-The *observed effective* microWakeWord cutoff was **0.75 for stock TECHO5 during music** and **0.85 for FrankenASP**. This is an end-to-end comparison under the actual conditions, **not** a threshold-matched DSP-only isolation experiment. False-positive rates were not qualified by these trials.
+The **no-music baselines**, directional interference results, and the geometry of the loudspeaker arrangement are covered in the [full report](docs/frankenasp/athena-acoustic-comparison-20261025.md). Notably, even *faint secondary household speech* from the nearer speaker severely reduced stock TECHO5's detection of a voice from the more distant side.
 
-**Not yet established:** recognition of the command following the wake word; STT accuracy under directional interference; source tracking; long-term stability; false-positive trade-offs; other Echo variants; or which individual Amazon technique (AEC, beamforming, beam selection, denoising, etc.) causes the advantage. Spatial processing is an interesting hypothesis, **not proven causal attribution**.
+**Interpretation boundaries:** Mono/stereo describes only the Echo's **own speaker playback**, not microphone-array modes. During music, the observed effective MWW cutoff was **0.75 for stock TECHO5** and **0.85 for FrankenASP** despite the same configured model threshold. These are end-to-end wake-word activations, **not** threshold-isolated algorithm rankings, false-positive measurements, evidence of better STT accuracy, or proof that a particular factory DSP stage caused the gap. This remains a research project, **not** an Amazon software distribution or a proposal to introduce proprietary processing into upstream TECHO5.
 
-See the [first acoustic results](docs/frankenasp/acoustic-results-20261023.md), [test protocol](docs/frankenasp/testing.md) and [Dev Edition notes](docs/frankenasp/release-v1.0.0-dev.1.md).
+The [initial results dated 23 October](docs/frankenasp/acoustic-results-20261023.md) are preserved as a historical interim snapshot; the **full benchmark linked above supersedes their incomplete level-30 matrix**.
 
 ## Licensing, ownership and the proprietary boundary
 

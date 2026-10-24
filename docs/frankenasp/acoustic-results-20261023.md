@@ -1,5 +1,7 @@
 # Initial acoustic results — Echo Show 8 Gen 2 (Athena)
 
+> **Historical interim results (23 October 2026).** The [completed 25 October benchmark](athena-acoustic-comparison-20261025.md) includes the full level-30 matrix, completed no-music baselines, and the acoustic test-room diagram. The earlier counts below are retained as originally published.
+
 **23 October 2026 · Research preview · Wake-word activations during music playback by the Echo itself**
 
 This document records the **first limited measurement output of an independent A/B research instrument**, not a preselected winner or a recommendation to replace TECHO5's audio frontend. The FrankenASP proof of concept was run on real Athena hardware, using the device's original Amazon speech-input ASP through an owner-local ARM32/Bionic worker. Startup, continuous PCM output, wake-word input, and guarded recovery have been demonstrated. Controlled, repeated acoustic testing shows a substantial initial wake-word detection advantage over the stock TECHO5 voice frontend. This is a practical engineering comparison, **not** a long-duration reliability qualification or an academic characterization of individual DSP algorithms.

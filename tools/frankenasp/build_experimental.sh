@@ -40,7 +40,11 @@ if [[ -z "$BASE_TAG_SHA" ]]; then
     exit 2
 fi
 if ! git -C "$ADAPTER_ROOT" merge-base --is-ancestor "$BASE_TAG_SHA" "$ADAPTER_SHA"; then
-    echo "TECHO5 base $BASE is not an ancestor of the adapter checkout" >&2
+    if [[ "$(git -C "$ADAPTER_ROOT" rev-parse --is-shallow-repository)" == true ]]; then
+        echo "Cannot establish base ancestry in a shallow TECHO5 adapter checkout; fetch more upstream history (git fetch --unshallow) and retry" >&2
+    else
+        echo "TECHO5 base $BASE is not an ancestor of the adapter checkout" >&2
+    fi
     exit 2
 fi
 LATEST_BASE="$(git -C "$ADAPTER_ROOT" tag --merged HEAD --list 'v[0-9]*' |

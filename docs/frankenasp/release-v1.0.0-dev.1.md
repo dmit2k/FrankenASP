@@ -53,7 +53,7 @@ More results, including quiet/loud stimuli, limitations and study boundaries: [I
 
 ### Independent repeat CI on the release source snapshot (24 October 2026)
 
-A **second complete clean-source CI run** was performed on `independent build host` using source commit `f9c1e76d9e734f12de7d8c9b10c3eda803015831`, Go 1.26.0, `-count=1` and bounded Go package parallelism (`-p 3`). Its fresh results:
+A **second complete clean-source CI run** was performed on the independent build host using source commit `f9c1e76d9e734f12de7d8c9b10c3eda803015831`, Go 1.26.0, `-count=1` and bounded Go package parallelism (`-p 3`). Its fresh results:
 
 | Check | Repeat result |
 | --- | --- |
@@ -66,7 +66,7 @@ A **second complete clean-source CI run** was performed on `independent build ho
 | `GOOS=darwin go vet ./cmd/techo5-deck` | **PASS** |
 | AArch64 `build_experimental.sh` on clean checkout | **PASS** |
 
-The last repeat-run marker was `REPEAT_CI_ALL_PASS` at **2026-10-23 22:18:27 UTC** (24 October, Riga time). Test logs and the locally built executable remain on the independent build host under `a private local workspace`.
+The last repeat-run marker was `REPEAT_CI_ALL_PASS` at **2026-10-23 22:18:27 UTC** (24 October, Riga time). Test logs and the locally built executable remain on the independent build host under a private local workspace.
 
 The only subsequent adjustments in the preserved combined release snapshot were **documentation-only**; no `echod` or `tools/frankenasp` source changes were made after the repeated CI. The current [independent build guide](build-on-ubuntu-26.04.md) describes the standard Linux toolchain and archive extraction commands. The repeated off-device CI does not supersede the acoustic-trial provenance limitation stated above.
 

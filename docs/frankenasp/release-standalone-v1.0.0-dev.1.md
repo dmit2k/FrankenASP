@@ -35,7 +35,7 @@ A new test workspace was created by cloning both public repositories and unpacki
 | ARM32 Android/Bionic native worker, NDK r27d | **PASS** |
 | Source tree clean after the build | **PASS** |
 
-Reproduction logs and binary outputs are retained privately on `independent build host` in `a private local workspace`. The successful checked run ended **2026-10-24 00:12:50 UTC**. Subsequent changes to the standalone repository before tagging were documentation-only; the tested worker, installer and adapter code are unchanged.
+Reproduction logs and binary outputs are retained privately on the independent build host in a private local workspace. The successful checked run ended **2026-10-24 00:12:50 UTC**. Subsequent changes to the standalone repository before tagging were documentation-only; the tested worker, installer and adapter code are unchanged.
 
 Representative binaries from this independent off-device run:
 

@@ -1,6 +1,6 @@
 # Building FrankenASP Dev Edition on Ubuntu 26.04 LTS
 
-This records a **fresh-host, independent** build/verification on `independent build host` (23–24 October 2026) for the FrankenASP **objective and subjective comparison toolkit**. The worker and adapter make two speech frontends observable under controlled conditions; they are **not** a ready-made replacement for TECHO5's own voice processing. It is **not** an instruction to flash a TECHO5 image or to copy Amazon binaries. The deliverable built here is the open-source AArch64 experimental `echod` daemon. The ARM32 native DSP worker is a **separate Android NDK build** (below); the owner's factory `libasp.so` is never built or distributed.
+This records a **fresh-host, independent** build/verification on the independent build host (23–24 October 2026) for the FrankenASP **objective and subjective comparison toolkit**. The worker and adapter make two speech frontends observable under controlled conditions; they are **not** a ready-made replacement for TECHO5's own voice processing. It is **not** an instruction to flash a TECHO5 image or to copy Amazon binaries. The deliverable built here is the open-source AArch64 experimental `echod` daemon. The ARM32 native DSP worker is a **separate Android NDK build** (below); the owner's factory `libasp.so` is never built or distributed.
 
 ## Tested host and dependencies
 
@@ -30,7 +30,7 @@ sudo apt-get install -y e2fsprogs patchelf openssh-client
 
 ## Install a verified Go toolchain
 
-The Go version is dictated by `echod/go.mod`: `go 1.26.0`. An ordinary `go` executable was **not** preinstalled on `independent build host`. For a user-local installation:
+The Go version is dictated by `echod/go.mod`: `go 1.26.0`. An ordinary `go` executable was **not** preinstalled on the independent build host. For a user-local installation:
 
 ```sh
 mkdir -p "$HOME/.local/opt"
@@ -113,7 +113,7 @@ The official NDK ZIP is large and its extraction needs sufficient disk space. Th
 
 The ARM32 worker is **not** produced by the Go-only build above. Private factory binaries, original Bionic runtime files, DSP configurations, factory beamformer coefficients and user recordings are **not** included in this repository or a public release. Use the owner-specific read-only preflight, explicit `--install`, guarded activation and rollback procedures in [installation.md](installation.md).
 
-### Independent native-worker build actually performed on `independent build host`
+### Independent native-worker build actually performed on the independent build host
 
 The additional **ARM32/Bionic native worker** was successfully built using **Android NDK r27d (27.3.13750724)**, downloaded from Google's official Android repository. Google's release checksums list the `android-ndk-r27d-linux.zip` size as **663,956,036 bytes**, SHA-1 **`22105e410cf29afcf163760cc95522b9fb981121`**, which was verified after the download. No proprietary Amazon files were needed.
 

@@ -27,7 +27,7 @@ speaker volume settings were changed during the run.
     **256,000 bytes**. Recorded before TECHO5's downstream leveling.
 - The probe wrote 128,000 consecutive 16 kHz samples and closed its
   output files automatically. Private recordings were transferred to
-  `private research host`, compared byte-for-byte by SHA-256, and removed from
+  the private research host, compared byte-for-byte by SHA-256, and removed from
   the Echo. The files are **not** in Git or distributed.
 - The 60-second trial completed with `trial deadline; automatic
   rollback`; factory markers and the temporary binary bind mount

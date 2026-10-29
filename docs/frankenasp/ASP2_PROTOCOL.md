@@ -1,10 +1,11 @@
 # External ASP2: session configuration and PCM transport (draft protocol revision)
 
-**Status: DESIGN SPECIFICATION ONLY — NOT IMPLEMENTED.** Dated 2026-10-27.
-Protocol identity remains **ASP2**, wire version **2**. This is a one-time
-pre-release incompatible update to the previous fixed 40-byte CFG2.
-Do not use this document to claim that existing TECHO5 or FrankenASP binaries
-already implement these rules. Rebuild and test all participants together.
+**Status: IMPLEMENTED IN EXPERIMENTAL PAIRED TECHO5 / EXTERNAL ASP BUILDS.**
+Protocol identity remains **ASP2**, wire version **2**. This revision uses
+variable-length CFG2/TLV, not the older fixed-size configuration layout.
+Status codes in section 8 describe the implemented current versions.
+This does not imply upstream release acceptance, universal hardware
+qualification, or compatibility with older installed binaries.
 
 The shared ASP2 wire specification is maintained in TECHO5
 (`docs/external-asp/ASP2_PROTOCOL.md`) and mirrored in FrankenASP
@@ -267,9 +268,9 @@ HELLO and exchange deadlines; helper crash/restart and fallback;
 exact PCM identity (no host Q30), one DSP calibration authority and
 the existing 8 ms factory FIFO versus 20 ms capture tick.
 
-The standard is a **draft specification** until the listed tests and
-paired implementations pass. No hardware acceptance or GitHub release
-is implied by drafting this file.
+The ASP2 revision 2 protocol has paired experimental host/helper
+implementations and offline conformance tests. Board-specific hardware
+qualification and any upstream release acceptance remain separate.
 
 
 ## 8. ASP2 status codes and origin reporting
@@ -330,43 +331,15 @@ only to text presentation, **not** the ASP2 wire code and not
 `asp_status_code`; the existing `asp_origin` field remains authoritative
 in structured logs.
 
-**Implementation note:** the 2026-10-29 status-code migration
-replaced the legacy 000 display code for meaningful host messages
-and the real factory ACK. Current TECHO5 rejects a meaningful status
-with Code=0; the recommended host/external halves remain advisory,
-not wire validation boundaries. Older installed binaries may still
-emit or accept STATE 000; update paired binaries consistently.
+**Current implementation:** echod and the current FrankenASP children use
+nonzero numeric codes for meaningful statuses. The TECHO5 decoder accepts
+meaningful status codes from either suggested provider half, but rejects
+a nonempty status with Code=0. A missing status remains Kind=0, Code=0.
+Use compatible paired host and helper builds.
 
-### 8.2 Historical FrankenASP codes before the migration
+### 8.2 FrankenASP: current provider-local status codes
 
-This table records legacy values only for troubleshooting older installed
-binaries. Some codes previously represented more than one cause. These
-values are replaced by the unique current codes in section 8.3.
-
-| Legacy wire code | Former message | Emitting backend |
-|---|---|---|
-| `000` (STATE in ACK2) | Empty message: accepted factory configuration | Real ARM32/Bionic factory child |
-| `299` | `Synthetic only; factory qualification unavailable` | Synthetic child |
-| `299` | `Experimental factory mock; unqualified` | Factory mock child |
-| `503` | `Factory processing failed` | Factory child |
-| `503` | `Synthetic processing failed` | Synthetic child |
-| `522` | `Invalid CFG2 session` | Factory, synthetic, production admission entry |
-| `522` | `Unsupported offline factory session` | Factory mock child |
-| `522` | `Unsupported synthetic factory session` | Synthetic child |
-| `523` | `Invalid immutable input framing` | Factory, synthetic |
-| `523` | `Truncated input payload` | Factory, synthetic |
-| `524` | `Offline factory mock mode unavailable` | Factory mock child |
-| `524` | `Offline synthetic mode unavailable` | Synthetic child |
-| `524` | `Factory production qualification unavailable` | Production admission entry |
-
-Ordinary RSP2 replies use Kind=0 and Code=0 to mean no status.
-The real factory backend can still fail before HELLO; in that case
-stderr reports the failure without a wire status. Factory ACK
-STATE 000 belongs only to older binaries.
-
-### 8.3 FrankenASP: current provider-local status codes
-
-The following IDs are implemented by the current FrankenASP C children.
+The following IDs are emitted by the current FrankenASP C children.
 They are local to FrankenASP; another external ASP provider does not
 need to use or recognize them. The recommended external half of each
 class is used for these IDs. Factory `E:251` is emitted **only once**,
@@ -388,8 +361,9 @@ on the first PCM-ready transition, never on every 20-ms frame.
 | `E:575` | `Factory production qualification unavailable` |
 | `E:576` | `Offline factory mock mode unavailable` |
 
-For each provider, an unchanged numeric code should not be used
-for unrelated failures. The changes update the wire status **values**,
-not their binary field types, packet framing, or the advisory
-allocation policy. Older FrankenASP binaries retain the legacy
-values listed in 8.2; align host and helper versions before activation.
+For each provider, an unchanged numeric code should not be used for
+unrelated failures. These are the actual emitted C-helper status codes,
+not protocol-wide assignments; other external DSP providers remain
+independent. Ordinary RSP2 frames without status use Kind=0, Code=0.
+A failure before HELLO can only be reported via stderr / child exit
+because the ASP2 session has not started.

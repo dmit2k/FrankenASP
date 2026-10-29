@@ -126,10 +126,10 @@ class RuntimeTests(unittest.TestCase):
         return c
     def accepted(self, c, cfg=GOOD):
         h, msg = c.configure(cfg)
-        self.assertEqual((h[1], h[2], h[3], h[5]), (1, 1, 299, 0))
+        self.assertEqual((h[1], h[2], h[3], h[5]), (1, 1, getattr(self,"accepted_code",290), 0))
         self.assertIn(b"Synthetic only", msg)
         self.assertIn(b"factory qualification unavailable", msg)
-    def terminal(self, c, code=523, seq=0):
+    def terminal(self, c, code=571, seq=0):
         h, _, pcm = c.reply()
         self.assertEqual((h[1], h[2], h[3], h[5], h[6], h[7], h[8]), (3,1,code,0,seq,NO,0))
         self.assertEqual(pcm, b"")
@@ -138,7 +138,7 @@ class RuntimeTests(unittest.TestCase):
         for f in sorted(FIX.glob("*.cfg2")):
             c = self.child()
             h, _ = c.configure(f.read_bytes())
-            self.assertEqual((h[1], h[3]), (1,299) if f.read_bytes() == GOOD else (2,522), f.name)
+            self.assertEqual((h[1], h[3]), (1,getattr(self,"accepted_code",290)) if f.read_bytes() == GOOD else (2,573), f.name)
             if h[1] == 2:
                 c.ended()
     def test_all_pcm_maps_alignments_and_immutable_q30(self):
@@ -155,8 +155,9 @@ class RuntimeTests(unittest.TestCase):
                         m, r = input_pcm(seq, high)
                         before = hashlib.sha256(m+r).digest()
                         h, msg, pcm = c.request(seq, m, r)
-                        self.assertEqual((h[2],h[3],h[4],h[5],h[6]), (0,0,0,0,seq))
-                        self.assertEqual(msg, b"")
+                        expected=(1,251,26) if seq==1 and getattr(self,"factory_ready_status",False) else (0,0,0)
+                        self.assertEqual((h[2],h[3],h[4],h[5],h[6]), (*expected,0,seq))
+                        self.assertEqual(msg, b"Factory processing started" if expected[0] else b"")
                         self.assertEqual((h[1],h[7],h[8]), (2,NO,0) if seq == 0 else (1,(seq-1)*320,640))
                         self.assertEqual(pcm, b"" if seq == 0 else previous)
                         previous = oracle(m,r,perm,ref,high)
@@ -197,22 +198,23 @@ class RuntimeTests(unittest.TestCase):
         cases.append(packet(items[:-1]+[(0x101,0,v)]))
         # Valid absent REF with matching stream_flags.
         cases.append(packet([(t,f,bytes(16) if t==2 else v) for t,f,v in tags()],1))
-        for cfg in cases:
-            c=self.child();h,_=c.configure(cfg);self.assertEqual((h[1],h[3]),(2,522));c.ended()
+        for index,cfg in enumerate(cases):
+            expected=570 if index in (0,11) else 573
+            c=self.child();h,_=c.configure(cfg);self.assertEqual((h[1],h[3]),(2,expected));c.ended()
     def test_header_validation_before_payload_read(self):
         for off,fmt,values in [(4,"<H",[0,3]),(6,"<H",[15,40]),(8,"<I",[0,15,8193,0xffffffff]),
                                (12,"<I",[0,3,8,0xffffffff])]:
             for value in values:
                 c=self.child();h=bytearray(GOOD[:16]);S.pack_into(fmt,h,off,value)
                 # Keep stdin OPEN: invalid header must not wait for a body.
-                c.write(h);a,_=c.ack();self.assertEqual((a[1],a[3]),(2,522));c.ended()
+                c.write(h);a,_=c.ack();self.assertEqual((a[1],a[3]),(2,570));c.ended()
         c=self.child();a,_=c.configure(S.pack("<4sHHII",b"CFG2",2,16,16,7));self.assertEqual(a[1],2);c.ended()
     def test_all_golden_prefixes_terminal_reject(self):
         for f in FIX.glob("*.cfg2"):
             raw=f.read_bytes()
             for n in range(len(raw)):
                 c=self.child();c.write(raw[:n]);c.p.stdin.close()
-                h,_=c.ack();self.assertEqual((h[1],h[3]),(2,522),(f.name,n));c.ended();c.close()
+                h,_=c.ack();self.assertEqual((h[1],h[3]),(2,570),(f.name,n));c.ended();c.close()
     def test_unknown_optional_max8192_and_exact_next_message(self):
         m,r=input_pcm()
         for raw in [packet(tags()+[(0x200,0,b"ignored")]),
@@ -226,14 +228,14 @@ class RuntimeTests(unittest.TestCase):
             self.assertEqual(c.request(1,m,r)[2],oracle(m,r))
         for raw in [packet(tags()+[(0x200,1,b"required")]),packet(tags()+[(0x200+i,0,b"") for i in range(61)]),
                     packet(tags()+[tags()[-1]]),packet(list(reversed(tags())))]:
-            c=self.child();h,_=c.configure(raw);self.assertEqual((h[1],h[3]),(2,522));c.ended()
+            c=self.child();h,_=c.configure(raw);self.assertEqual((h[1],h[3]),(2,570));c.ended()
     def test_no_implicit_mode_or_legacy_downgrade(self):
         for args in [[],["--offline-replay","unused"],["--offline-synthetic-cfg2","0,0,2,3","0,1"],
                      ["--offline-synthetic-cfg2","0,1,2,3","1,1"],["--offline-synthetic-cfg2","extra"]]:
-            c=self.child(args=args);h,_=c.ack();self.assertEqual((h[1],h[3]),(2,524));c.ended()
-        c=self.child();h,_=c.configure(LEGACY);self.assertEqual((h[1],h[3]),(2,522));c.ended()
+            c=self.child(args=args);h,_=c.ack();self.assertEqual((h[1],h[3]),(2,getattr(self,"unavailable_code",572)));c.ended()
+        c=self.child();h,_=c.configure(LEGACY);self.assertEqual((h[1],h[3]),(2,570));c.ended()
         c=self.child(binary="test-external-asp",args=[])
-        h,_=c.configure(GOOD);self.assertEqual((h[1],h[3]),(2,524));c.ended()
+        h,_=c.configure(GOOD);self.assertEqual((h[1],h[3]),(2,575));c.ended()
     def test_short_syscalls_eintr_and_fragmented_host(self):
         c=self.child(binary="test-cfg2-synthetic-fragmented")
         h,_=c.configure(GOOD,1);self.assertEqual(h[1],1)
@@ -249,23 +251,23 @@ class RuntimeTests(unittest.TestCase):
              S.pack("<4sQII",b"INP2",0,len(m),0),GOOD[:20],b"X"*20]
         for data in bad:
             c=self.child();self.accepted(c);c.write(data);self.terminal(c)
-        for data in [b"I",S.pack("<4sQII",b"INP2",0,len(m),len(r))+m[:17],
-                     S.pack("<4sQII",b"INP2",0,len(m),len(r))+m+r[:17]]:
-            c=self.child();self.accepted(c);c.write(data);c.p.stdin.close();self.terminal(c)
+        for index,data in enumerate([b"I",S.pack("<4sQII",b"INP2",0,len(m),len(r))+m[:17],
+                     S.pack("<4sQII",b"INP2",0,len(m),len(r))+m+r[:17]]):
+            c=self.child();self.accepted(c);c.write(data);c.p.stdin.close();self.terminal(c,571 if index==0 else 574)
         c=self.child();self.accepted(c);c.request(0,m,r);c.write(S.pack("<4sQII",b"INP2",0,len(m),len(r)));self.terminal(c,seq=1)
         c=self.child();self.accepted(c);bad=S.pack("<i",8388608)+m[4:]
-        c.write(S.pack("<4sQII",b"INP2",0,len(m),len(r))+bad+r);self.terminal(c,503)
+        c.write(S.pack("<4sQII",b"INP2",0,len(m),len(r))+bad+r);self.terminal(c,551)
         # Failure after successful DSP quanta must suppress all PCM for this request.
         c=self.child();self.accepted(c);c.request(0,m,r)
         bad=bytearray(m);S.pack_into("<i",bad,len(bad)-4,-8388609)
-        c.write(S.pack("<4sQII",b"INP2",1,len(m),len(r))+bad+r);self.terminal(c,503,1)
+        c.write(S.pack("<4sQII",b"INP2",1,len(m),len(r))+bad+r);self.terminal(c,551,1)
     def test_backend_fatal_crash_hang_and_clean_restart(self):
         m,r=input_pcm()
         for fault in ["fatal","crash","hang"]:
             c=self.child(env={"ASP2_TEST_FAULT":fault});self.accepted(c)
             for seq in range(8):c.request(seq,m,r)
             c.write(S.pack("<4sQII",b"INP2",8,len(m),len(r))+m+r)
-            if fault=="fatal":self.terminal(c,503,8)
+            if fault=="fatal":self.terminal(c,551,8)
             elif fault=="crash":c.ended(17)
             else:
                 with self.assertRaises(TimeoutError):c.read(32,0.05)

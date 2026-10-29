@@ -66,7 +66,7 @@ only after all checks succeed. These bounded canaries detect tested nearby
 writes; they do not sandbox arbitrary vendor memory corruption.
 Timestamps start at zero, advance by exactly 8000000ns and are checked before
 signed seconds overflow. Failure after earlier quanta suppresses all PCM for
-that request. Framing/configuration/processing failures use terminal 523/522/503.
+that request. Framing/configuration/processing failures use terminal 571/570/550.
 
 Initialization completes before HELLO. ACK299 says
 "Experimental factory mock; unqualified". Stdout is reserved for wire bytes;

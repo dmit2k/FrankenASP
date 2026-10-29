@@ -13,7 +13,7 @@ int main(int argc,char **argv){
  signal(SIGTERM,terminated);signal(SIGINT,terminated);signal(SIGPIPE,terminated);
  if(exact_write(1,"ASP2",4))return 2;
  if(cfg2_read_fd(0,&session)!=CFG2_OK){
-  return ack(522,"Invalid CFG2 session")?2:0;
+  return ack(570,"Invalid CFG2 session")?2:0;
  }
- return ack(524,"Factory production qualification unavailable")?2:0;
+ return ack(575,"Factory production qualification unavailable")?2:0;
 }

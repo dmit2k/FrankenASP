@@ -34,26 +34,26 @@ int main(int argc,char **argv){
  /* All resource initialization precedes HELLO. No profile or metadata I/O. */
  int opened=selected&&dsp_open(&factory)==0;
  if(exact_write(1,"ASP2",4))goto done;
- if(!selected||!opened){ack(0,524,"Offline synthetic mode unavailable");goto done;}
+ if(!selected||!opened){ack(0,572,"Offline synthetic mode unavailable");goto done;}
  cfg2_error err=cfg2_read_fd(0,&c);
- if(err!=CFG2_OK){ack(0,522,"Invalid CFG2 session");goto done;}
- if(cfg2_runtime_init(&runtime,&c,&p)){ack(0,522,"Unsupported synthetic factory session");goto done;}
+ if(err!=CFG2_OK){ack(0,570,"Invalid CFG2 session");goto done;}
+ if(cfg2_runtime_init(&runtime,&c,&p)){ack(0,573,"Unsupported synthetic factory session");goto done;}
  const char *diag="CFG2 accepted: synthetic only; confirmed platform; MIC4 REF2; complete Q30 metadata; PCM gain authority none; explicit identity or CLI maps\n";
  if(exact_write(2,diag,(u32)strlen(diag)))goto done;
- if(ack(1,299,"Synthetic only; factory qualification unavailable"))goto done;
+ if(ack(1,290,"Synthetic only; factory qualification unavailable"))goto done;
  for(;;){
   u8 h[20];int rd=exact_read(0,h,20);
   if(rd==0)break;
   if(rd!=1||memcmp(h,"INP2",4)||le64(h+4)!=runtime.bridge.sequence||
      le32(h+12)!=runtime.session.mic_bytes||le32(h+16)!=runtime.session.ref_bytes){
-   reply(3,523,~(u64)0,"Invalid immutable input framing");break;
+   reply(3,571,~(u64)0,"Invalid immutable input framing");break;
   }
   if(exact_read(0,mic,MIC_BYTES)!=1||exact_read(0,refpcm,REF_BYTES)!=1){
-   reply(3,523,~(u64)0,"Truncated input payload");break;
+   reply(3,574,~(u64)0,"Truncated input payload");break;
   }
   int ready;u64 origin;
   if(cfg2_runtime_step(&runtime,mic,refpcm,&ready,pcm,&origin)){
-   reply(3,503,~(u64)0,"Synthetic processing failed");break;
+   reply(3,551,~(u64)0,"Synthetic processing failed");break;
   }
   if(reply(ready?1:2,0,origin,""))break;
   runtime.bridge.sequence++;

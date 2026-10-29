@@ -82,7 +82,7 @@ its deterministic output tests framing and association, not audio quality.
 
 Wrong magic, sequence, repeated CFG2, changed lengths, partial input header or
 payload produce one terminal RSP2 523, no PCM and exit. DSP failure or invalid
-LOW24 PCM produces terminal 503, including a failure after earlier quanta in
+LOW24 PCM produces terminal 551 (synthetic) or 550 (factory), including a failure after earlier quanta in
 the same request. Sequence/origin arithmetic is guarded before overflow.
 A clean input EOF discards carry without a tail. SIGTERM/SIGPIPE stop the
 process; crash/hang recovery, deadlines, reaping and stock fallback remain

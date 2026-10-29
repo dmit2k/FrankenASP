@@ -53,7 +53,7 @@ class Tests(unittest.TestCase):
   c=Child(binary="external-asp-host-diagnostic",args=[])
   self.addCleanup(c.close)
   h,_=c.configure(GOOD)
-  self.assertEqual((h[1],h[3]),(2,524));c.ended()
+  self.assertEqual((h[1],h[3]),(2,575));c.ended()
  def test_long_real_protocol(self):
   if os.getenv('ASP2_LONG')!='1':self.skipTest('explicit 100k stress')
   c=self.child();self.assertEqual(c.configure(GOOD)[0][1],1);expected=oracle(MIC,REF);times=[];rss=[];start=time.monotonic()

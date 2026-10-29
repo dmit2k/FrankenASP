@@ -18,9 +18,14 @@ class FactoryChild(BaseChild):
 # oracle against a different C backend. Keep F1-A source/tests unchanged.
 rt.Child = FactoryChild
 class FactoryRuntimeTests(rt.RuntimeTests):
+    accepted_code=291
+    unavailable_code=576
+    factory_ready_status=True
+    def terminal(self,c,code=571,seq=0):
+        return super().terminal(c,550 if code==551 else code,seq)
     def accepted(self, c, cfg=rt.GOOD):
         h,msg=c.configure(cfg)
-        self.assertEqual((h[1],h[2],h[3],h[5]),(1,1,299,0))
+        self.assertEqual((h[1],h[2],h[3],h[5]),(1,1,291,0))
         self.assertEqual(msg,b"Experimental factory mock; unqualified")
     def lifecycle(self,c,want,code=0):
         c.p.stdin.close()
@@ -34,12 +39,12 @@ class FactoryRuntimeTests(rt.RuntimeTests):
         for part in ["init","create","ref","process","destroy","deinit"]:
             c=self.child(env={"ASP2_TEST_FAULT":"missing-"+part})
             h,_=c.ack()
-            self.assertEqual((h[1],h[3]),(2,524))
+            self.assertEqual((h[1],h[3]),(2,576))
             c.ended()
         for fault,want in [("init",None),("create",b"lifecycle=ICX"),
                            ("ref",b"lifecycle=ICRDX")]:
             c=self.child(env={"ASP2_TEST_FAULT":fault})
-            h,_=c.ack();self.assertEqual((h[1],h[3]),(2,524))
+            h,_=c.ack();self.assertEqual((h[1],h[3]),(2,576))
             if want:self.lifecycle(c,want)
             else:c.ended()
     def test_process_counts_and_each_guard_terminal(self):
@@ -50,7 +55,7 @@ class FactoryRuntimeTests(rt.RuntimeTests):
             self.accepted(c);c.request(0,m,r)
             # Quantum 2 succeeds earlier in the same request; quantum 3 fails.
             h,_,pcm=c.request(1,m,r)
-            self.assertEqual((h[1],h[3],h[6],h[7],pcm),(3,503,1,rt.NO,b""))
+            self.assertEqual((h[1],h[3],h[6],h[7],pcm),(3,550,1,rt.NO,b""))
             self.lifecycle(c,b"lifecycle=ICRPDX")
     def test_eof_reject_destroy_and_repeated_cancellation(self):
         m,r=rt.input_pcm()
@@ -88,7 +93,7 @@ class FactoryRuntimeTests(rt.RuntimeTests):
         self.assertIn(b"Mock vendor stdout chatter",c.p.stderr.read())
         c=BaseChild(binary="test-cfg2-factory-mock",args=["--offline-synthetic-cfg2"])
         self.addCleanup(c.close)
-        h,_=c.ack();self.assertEqual((h[1],h[3]),(2,524));c.ended()
+        h,_=c.ack();self.assertEqual((h[1],h[3]),(2,576));c.ended()
 
 if __name__=="__main__":
     unittest.main(verbosity=2)

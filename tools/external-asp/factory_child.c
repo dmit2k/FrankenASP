@@ -74,35 +74,39 @@ int main(int argc,char **argv){
  }
 #endif
  if(exact_write(wire,"ASP2",4))goto done;
- if(!selected||!opened){ack(0,524,"Offline factory mock mode unavailable");goto done;}
+ if(!selected||!opened){ack(0,576,"Offline factory mock mode unavailable");goto done;}
  cfg2_error err=cfg2_read_fd(0,&c);
- if(err!=CFG2_OK){ack(0,522,"Invalid CFG2 session");goto done;}
- if(cfg2_runtime_init(&runtime,&c,&p)){ack(0,522,"Unsupported offline factory session");goto done;}
+ if(err!=CFG2_OK){ack(0,570,"Invalid CFG2 session");goto done;}
+ if(cfg2_runtime_init(&runtime,&c,&p)){ack(0,573,"Unsupported offline factory session");goto done;}
 #ifdef ASP2_FACTORY_MOCK
  const char *diag="CFG2 accepted: experimental factory mock, unqualified; confirmed platform; MIC4 REF2; complete Q30 metadata; Q30 metadata only; future gain authority vendor Calibrator; explicit identity or CLI maps\n";
  if(exact_write(2,diag,(u32)strlen(diag)))goto done;
- if(ack(1,299,"Experimental factory mock; unqualified"))goto done;
+ if(ack(1,291,"Experimental factory mock; unqualified"))goto done;
 #else
  const char *diag="CFG2 accepted: ARM32 Bionic factory; MIC4 REF2; complete Q30 metadata only; gain authority factory Calibrator; explicit captured-slot maps\n";
- if(exact_write(2,diag,(u32)strlen(diag))||ack(1,0,""))goto done;
+ if(exact_write(2,diag,(u32)strlen(diag))||ack(1,250,"Factory configuration accepted"))goto done;
 #endif
+ int reported_processing=0;
  for(;;){
   u8 h[20];int rd=exact_read(0,h,20);
   if(rd==0||factory_cancelled)break;
   if(rd!=1||memcmp(h,"INP2",4)||le64(h+4)!=runtime.bridge.sequence||
      le32(h+12)!=runtime.session.mic_bytes||le32(h+16)!=runtime.session.ref_bytes){
-   reply(3,523,~(u64)0,"Invalid immutable input framing");break;
+   reply(3,571,~(u64)0,"Invalid immutable input framing");break;
   }
   if(exact_read(0,mic,MIC_BYTES)!=1||exact_read(0,refpcm,REF_BYTES)!=1){
-   reply(3,523,~(u64)0,"Truncated input payload");break;
+   reply(3,574,~(u64)0,"Truncated input payload");break;
   }
   int ready;u64 origin;
   if(cfg2_runtime_step(&runtime,mic,refpcm,&ready,pcm,&origin)){
-   if(!factory_cancelled)reply(3,503,~(u64)0,"Factory processing failed");
+   if(!factory_cancelled)reply(3,550,~(u64)0,"Factory processing failed");
    break;
   }
   if(factory_cancelled)break;
-  if(reply(ready?1:2,0,origin,""))break;
+  /* One ready transition, not a STATE on every 20-ms PCM frame. */
+  int started=ready&&!reported_processing;
+  if(reply(ready?1:2,started?251:0,origin,started?"Factory processing started":""))break;
+  if(started)reported_processing=1;
   runtime.bridge.sequence++;
  }
 done:

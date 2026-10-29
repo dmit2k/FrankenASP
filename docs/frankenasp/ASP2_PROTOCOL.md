@@ -6,10 +6,12 @@ pre-release incompatible update to the previous fixed 40-byte CFG2.
 Do not use this document to claim that existing TECHO5 or FrankenASP binaries
 already implement these rules. Rebuild and test all participants together.
 
-The canonical copy is held in TECHO5 (`docs/external-asp/ASP2_PROTOCOL.md`).
-A byte-identical snapshot is included in FrankenASP
-(`docs/frankenasp/ASP2_PROTOCOL.md`) for independently authored providers.
-Update both copies as one change and verify SHA-256 equality.
+The shared ASP2 wire specification is maintained in TECHO5
+(`docs/external-asp/ASP2_PROTOCOL.md`) and mirrored in FrankenASP
+(`docs/frankenasp/ASP2_PROTOCOL.md`). Shared protocol rules must remain
+consistent, but implementation-specific status-code tables in section 8
+intentionally differ. Full-file byte identity and matching SHA-256 hashes
+are therefore not required.
 
 ## 1. Ownership and invariant audio contract
 
@@ -268,3 +270,128 @@ the existing 8 ms factory FIFO versus 20 ms capture tick.
 The standard is a **draft specification** until the listed tests and
 paired implementations pass. No hardware acceptance or GitHub release
 is implied by drafting this file.
+
+
+## 8. ASP2 status codes and origin reporting
+
+This section describes the ASP2 status model and **recommended** number
+allocation. It does not introduce a status-code registry, reserve specific
+codes globally across different providers, or change any on-wire field.
+An external DSP implementation is independent of FrankenASP.
+
+### 8.1 Wire representation, classification, and compatibility
+
+ASP2 transports a numeric `uint16` status code and a separate status kind
+(`STATE` or `EVENT`). A completely absent status is `Kind=0, Code=0` and
+has no message: it is **not** an OK/error message and must not create a log
+entry or overwrite the last meaningful status. The intended convention
+for a meaningful status is a nonzero code, preferably within the appropriate
+range below. Do not use `000` as a display code for success, failure, or
+other meaningful states.
+
+The status classes remain:
+
+| Code range | Meaning |
+|---|---|
+| `200–299` | Informational states/events and successful operation |
+| `300–399` | Processing degradation or diagnostic warnings |
+| `400–499` | Configuration degradation |
+| `500–599` | Terminal errors |
+
+For readability, these **nonbinding** subdivisions are suggested:
+
+| Class | TECHO5 host convention | External DSP convention |
+|---|---|---|
+| Info / OK | `200–249` | `250–299` |
+| Processing warnings | `300–349` | `350–399` |
+| Configuration warnings | `400–449` | `450–499` |
+| Terminal errors | `500–549` | `550–599` |
+
+These halves are **recommendations, not wire validation rules**. The host
+must not reject an otherwise valid status solely because an external DSP
+uses a code in the host-preferred half, or vice versa. Providers manage
+their own code meanings; there is no shared TECHO5/FrankenASP registry.
+Within one implementation, a code should consistently identify one
+state/cause; reuse for a different cause is discouraged. Other external
+DSPs may assign different meanings within their recommended half.
+
+For structured host logs, the numeric code and origin remain separate:
+
+```text
+asp_status_code=505 asp_origin=echod asp_kind=STATE asp_message="Fallback: external ASP processing timeout"
+asp_status_code=550 asp_origin=external-asp asp_kind=STATE asp_message="Example DSP processing failure"
+```
+
+The second line is **illustrative**, not an assigned ASP2 protocol code.
+In the single-string HA `ASP debug` entity, display a source prefix with
+colon separators: `H:505:Fallback: external ASP processing timeout` or
+`E:550:Example DSP processing failure`. Prefixes `H:` and `E:` belong
+only to text presentation, **not** the ASP2 wire code and not
+`asp_status_code`; the existing `asp_origin` field remains authoritative
+in structured logs.
+
+**Implementation note (documentation only):** current echod reports its own
+meaningful messages as `000` and its existing decoder can accept a
+nonempty `STATE` with code zero. Some existing helpers also send that
+legacy form. This section documents the agreed target convention; it
+does not claim these implementations already emit the suggested IDs or
+tighten compatibility checks.
+
+### 8.2 FrankenASP: status codes actually emitted today
+
+This table is **implementation-specific** to the current FrankenASP
+`tools/external-asp` C child programs. It is not a protocol-wide code
+registry. Several distinct messages currently share a number; the table
+records the implementation as it exists, **before** the proposed
+renumbering below.
+
+| Current wire code | Current message | Emitting backend |
+|---|---|---|
+| `000` (STATE in ACK2) | Empty message: accepted factory configuration | Real ARM32/Bionic factory child |
+| `299` | `Synthetic only; factory qualification unavailable` | Synthetic child |
+| `299` | `Experimental factory mock; unqualified` | Factory mock child |
+| `503` | `Factory processing failed` | Factory child |
+| `503` | `Synthetic processing failed` | Synthetic child |
+| `522` | `Invalid CFG2 session` | Factory, synthetic, production admission entry |
+| `522` | `Unsupported offline factory session` | Factory mock child |
+| `522` | `Unsupported synthetic factory session` | Synthetic child |
+| `523` | `Invalid immutable input framing` | Factory, synthetic |
+| `523` | `Truncated input payload` | Factory, synthetic |
+| `524` | `Offline factory mock mode unavailable` | Factory mock child |
+| `524` | `Offline synthetic mode unavailable` | Synthetic child |
+| `524` | `Factory production qualification unavailable` | Production admission entry |
+
+Ordinary RSP2 replies also carry **no status** (`Kind=0, Code=0`); that
+is not a separate emitted diagnostic. On genuine factory initialization
+failure **before HELLO**, stderr reports
+`Factory startup failed before HELLO` and no ASP2 status code is sent.
+The no-status RSP2 form is correct; `STATE 000` on factory ACK2 is
+existing legacy behavior to be replaced when status IDs are implemented.
+
+### 8.3 FrankenASP: planned provider-local message IDs
+
+The following assignments capture the intended cleanup, **not codes
+currently generated by shipped binaries**. They are local to FrankenASP:
+another external ASP provider does not need to use or recognize them.
+The recommended external half of each class is used for these IDs.
+
+| Proposed HA code | Message / state |
+|---|---|
+| `E:250` | `Factory configuration accepted` |
+| `E:251` | `Factory processing started` (state transition, not every PCM frame) |
+| `E:290` | `Synthetic only; factory qualification unavailable` |
+| `E:291` | `Experimental factory mock; unqualified` |
+| `E:550` | `Factory processing failed` |
+| `E:551` | `Synthetic processing failed` |
+| `E:570` | `Invalid CFG2 session` |
+| `E:571` | `Invalid immutable input framing` |
+| `E:572` | `Offline synthetic mode unavailable` |
+| `E:573` | `Unsupported CFG2 session` (valid but unsupported) |
+| `E:574` | `Truncated input payload` |
+| `E:575` | `Factory production qualification unavailable` |
+| `E:576` | `Offline factory mock mode unavailable` |
+
+For each provider, an unchanged numeric code should not be used for
+unrelated failures. Renumbering these messages requires changes to
+FrankenASP and related tests in a separate implementation change; this
+documentation update alone changes neither runtime nor wire behavior.
